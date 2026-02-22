@@ -1,11 +1,15 @@
 package com.example.newsflow.di
 
 import com.example.newsflow.data.remote.api.AuthApi
+import com.example.newsflow.data.remote.api.NewsApi
+import com.example.newsflow.data.remote.interceptor.NewsAuthInterceptor
 import com.example.newsflow.utils.authRetrofit
+import com.example.newsflow.utils.newsRetrofit
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import javax.inject.Singleton
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -19,16 +23,45 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun authRetrofit () = Retrofit.Builder()
+    @authRetrofit
+    fun authRetrofit() = Retrofit.Builder()
         .baseUrl(baseUrl())
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
     @Provides
     @Singleton
-    fun provideAuthService( retrofit : Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
+    fun provideAuthService(@authRetrofit retrofit: Retrofit): AuthApi =
+        retrofit.create(AuthApi::class.java)
 
-//    @Provides
-//    @Singleton
-//    fun provideNewsService(@newsRetrofit  retrofit : Retrofit): ApiService = retrofit.create(ApiService::class.java)
+
+
+
+
+
+    //news//
+    @Provides
+    fun baseUrlNews() = "https://newsapi.org/v2/"
+
+    @Provides
+    @Singleton
+    fun okHttpClient() = OkHttpClient.Builder()
+        .addInterceptor(NewsAuthInterceptor())
+        .build()
+
+
+    @Provides
+    @Singleton
+    @newsRetrofit
+    fun provideNewsRetrofit(okHttpClient: OkHttpClient) = Retrofit.Builder()
+        .baseUrl(baseUrlNews())
+        .client(okHttpClient)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+
+    @Provides
+    @Singleton
+    fun provideNewsService(@newsRetrofit retrofit: Retrofit): NewsApi =
+        retrofit.create(NewsApi::class.java)
 }

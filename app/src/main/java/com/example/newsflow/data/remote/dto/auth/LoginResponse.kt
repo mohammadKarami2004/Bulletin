@@ -1,4 +1,4 @@
-package com.example.newsflow.data.dto.auth
+package com.example.newsflow.data.remote.dto.auth
 
 data class LoginResponse(
     val id : Int,

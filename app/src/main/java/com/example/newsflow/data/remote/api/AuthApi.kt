@@ -1,9 +1,9 @@
 package com.example.newsflow.data.remote.api
 
-import com.example.newsflow.data.dto.auth.LoginRequest
-import com.example.newsflow.data.dto.auth.LoginResponse
-import com.example.newsflow.data.dto.auth.RefreshRequest
-import com.example.newsflow.data.dto.auth.RefreshResponse
+import com.example.newsflow.data.remote.dto.auth.LoginRequest
+import com.example.newsflow.data.remote.dto.auth.LoginResponse
+import com.example.newsflow.data.remote.dto.auth.RefreshRequest
+import com.example.newsflow.data.remote.dto.auth.RefreshResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.Response

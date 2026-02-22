@@ -7,8 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.newsflow.presentation.auth.LoginScreen
 import com.example.newsflow.presentation.auth.LoginViewModel
+import com.example.newsflow.presentation.home.HomeScreen
+import com.example.newsflow.presentation.home.HomeViewModel
 import com.example.newsflow.ui.theme.NewsFlowTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -19,12 +20,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NewsFlowTheme {
-                val viewModel: LoginViewModel = hiltViewModel()
+                val viewModel: HomeViewModel = hiltViewModel()
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-                LoginScreen(
+                HomeScreen(
                     uiState = uiState,
-                    onLoginClick = viewModel::login
                 )
             }
         }

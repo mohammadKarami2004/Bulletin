@@ -1,10 +1,10 @@
 package com.example.newsflow.data.repository
 
 import android.util.Log
-import com.example.newsflow.data.dto.auth.LoginRequest
-import com.example.newsflow.data.dto.auth.LoginResponse
-import com.example.newsflow.data.dto.auth.RefreshRequest
-import com.example.newsflow.data.dto.auth.RefreshResponse
+import com.example.newsflow.data.remote.dto.auth.LoginRequest
+import com.example.newsflow.data.remote.dto.auth.LoginResponse
+import com.example.newsflow.data.remote.dto.auth.RefreshRequest
+import com.example.newsflow.data.remote.dto.auth.RefreshResponse
 import com.example.newsflow.data.remote.api.AuthApi
 import com.example.newsflow.utils.Resource
 import com.example.newsflow.domain.repository.AuthRepository
