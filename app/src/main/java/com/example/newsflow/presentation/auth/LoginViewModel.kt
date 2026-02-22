@@ -24,8 +24,8 @@ class LoginViewModel @Inject constructor(private val loginUseCase: LoginUseCase)
 
 
         viewModelScope.launch {
-            val result = loginUseCase.invoke(LoginRequest(username, password))
             _uiState.update { it.copy(isLoading = true, error = null) }
+            val result = loginUseCase.invoke(LoginRequest(username, password))
             when (result) {
 
                 is Resource.Success -> {
