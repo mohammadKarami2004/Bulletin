@@ -3,6 +3,7 @@ package com.example.newsflow.presentation.home
 import android.content.ClipData
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,10 +32,13 @@ import com.example.newsflow.domain.model.Article
 import com.example.newsflow.ui.theme.NewsFlowTheme
 
 @Composable
-fun HomeScreen(uiState: HomeUiState ) {
+fun HomeScreen(
+    uiState: HomeUiState,
+    onArticleClick: (Article) -> Unit
+) {
     Column(Modifier.fillMaxSize()) {
 
-       //header
+        //header
         Row(
             Modifier
                 .fillMaxWidth()
@@ -59,9 +63,10 @@ fun HomeScreen(uiState: HomeUiState ) {
         //form
         LazyColumn(Modifier.fillMaxSize()) {
             items(uiState.news) { article ->
-                AsyncImage(article.urlToImage, contentDescription = "Image")
-                Text(article.title)
-
+                Column(Modifier.clickable { onArticleClick(article) }) {
+                    AsyncImage(article.urlToImage, contentDescription = "Image")
+                    Text(article.title)
+                }
             }
         }
 
@@ -74,6 +79,5 @@ fun HomeScreen(uiState: HomeUiState ) {
 @Composable
 fun Preview() {
     NewsFlowTheme {
-        HomeScreen( uiState = HomeUiState())
-    }
+        HomeScreen(uiState = HomeUiState(), onArticleClick = {})    }
 }

@@ -8,14 +8,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.newsflow.presentation.auth.LoginScreen
 import com.example.newsflow.presentation.auth.LoginViewModel
 import com.example.newsflow.presentation.bookmark.BookmarkScreen
 import com.example.newsflow.presentation.bookmark.BookmarkViewModel
+import com.example.newsflow.presentation.detail.DetailScreen
+import com.example.newsflow.presentation.detail.DetailViewModel
 import com.example.newsflow.presentation.home.HomeScreen
 import com.example.newsflow.presentation.home.HomeViewModel
 import com.example.newsflow.presentation.main.MainViewModel
@@ -41,7 +45,15 @@ fun AppNavGraph() {
             if (currentRoute != Screen.LoginScreen.route) {
                 BottomNavBar(
                     currentRoute = currentRoute,
-                    onItemClick = { navController.navigate(it) }
+                    onItemClick = { route ->
+                        navController.navigate(route) {
+                            popUpTo(Screen.HomeScreen.route) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
         }
@@ -70,13 +82,35 @@ fun AppNavGraph() {
             composable(Screen.HomeScreen.route) {
                 val viewModel: HomeViewModel = hiltViewModel()
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                HomeScreen(uiState)
+                HomeScreen(
+                    uiState = uiState,
+                    onArticleClick = { article ->
+                        navController.navigate(Screen.DetailScreen.createRoute(article))
+                    }
+                )
             }
             composable(Screen.BookmarkScreen.route) {
                 val viewModel: BookmarkViewModel = hiltViewModel()
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                BookmarkScreen(uiState, onDelete = viewModel::deleteBookmark)
+                BookmarkScreen(
+                    uiState = uiState,
+                    onDelete = viewModel::deleteBookmark,
+                    onArticleClick = { article ->
+                        navController.navigate(Screen.DetailScreen.createRoute(article))
+                    }
+                )
 
+            }
+            composable(
+                route = Screen.DetailScreen.route,
+                arguments = listOf(navArgument("article") { type = NavType.StringType })
+            ) {
+                val viewModel: DetailViewModel = hiltViewModel()
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                DetailScreen(
+                    uiState = uiState,
+                    onBookmarkClick = viewModel::toggleBookmark
+                )
             }
 
         }

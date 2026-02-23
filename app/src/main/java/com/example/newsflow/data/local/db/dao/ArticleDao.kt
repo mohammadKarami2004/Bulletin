@@ -21,6 +21,7 @@ interface ArticleDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM article WHERE url = :url)")
     suspend fun isBookmarked(url: String): Boolean
+
 }
 
 

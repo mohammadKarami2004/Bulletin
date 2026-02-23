@@ -51,4 +51,8 @@ class NewsRepositoryImpl @Inject constructor(private val newsApi: NewsApi,
         return articleDao.getAllArticles().map { articles -> articles.map { article -> article.toDomain() }}
 
     }
+    override suspend fun isBookmarked(url: String): Boolean {
+        return articleDao.isBookmarked(url)
+    }
+
 }
