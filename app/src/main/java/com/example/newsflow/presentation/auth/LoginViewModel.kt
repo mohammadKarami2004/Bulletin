@@ -3,7 +3,9 @@ package com.example.newsflow.presentation.auth
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.newsflow.data.local.datastore.TokenDataStore
 import com.example.newsflow.data.remote.dto.auth.LoginRequest
+import com.example.newsflow.data.remote.dto.auth.LoginResponse
 import com.example.newsflow.domain.useCase.auth.LoginUseCase
 import com.example.newsflow.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +18,9 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(private val loginUseCase: LoginUseCase) : ViewModel() {
+class LoginViewModel @Inject constructor(
+    private val loginUseCase: LoginUseCase, private val tokenDataStore: TokenDataStore
+) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
@@ -25,13 +29,16 @@ class LoginViewModel @Inject constructor(private val loginUseCase: LoginUseCase)
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            val result = loginUseCase.invoke(LoginRequest(username, password))
-            when (result) {
+            when (
+                val result = loginUseCase.invoke(LoginRequest(username, password))) {
 
                 is Resource.Success -> {
 
                     Log.d("LoginViewModel", "Success: ${result.data.username}")
-                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                    _uiState.update {
+                        it.copy(isLoading = false, isSuccess = true)
+                    }
+                    tokenDataStore.saveTokens(result.data.accessToken, result.data.refreshToken)
                 }
 
                 is Resource.Error -> {
