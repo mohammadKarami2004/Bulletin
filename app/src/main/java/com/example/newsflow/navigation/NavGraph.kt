@@ -10,6 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.newsflow.presentation.auth.LoginScreen
 import com.example.newsflow.presentation.auth.LoginViewModel
+import com.example.newsflow.presentation.bookmark.BookmarkScreen
+import com.example.newsflow.presentation.bookmark.BookmarkViewModel
 import com.example.newsflow.presentation.home.HomeScreen
 import com.example.newsflow.presentation.home.HomeViewModel
 import com.example.newsflow.presentation.main.MainViewModel
@@ -51,6 +53,12 @@ fun AppNavGraph() {
             val viewModel: HomeViewModel = hiltViewModel()
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             HomeScreen(uiState)
+        }
+        composable (Screen.BookmarkScreen.route){
+            val viewModel: BookmarkViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            BookmarkScreen(uiState, onDelete = viewModel::deleteBookmark)
+
         }
 
     }
