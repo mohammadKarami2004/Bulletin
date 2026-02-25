@@ -9,6 +9,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.newsflow.notification.NewsNotificationManager
 import com.example.newsflow.worker.NewsSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
@@ -27,6 +28,7 @@ class MyApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        NewsNotificationManager(this).createChannel()
         scheduleNewsSync()
     }
 
