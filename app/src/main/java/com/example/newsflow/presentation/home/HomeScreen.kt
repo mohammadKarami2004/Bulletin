@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -42,9 +43,8 @@ fun HomeScreen(
         Row(
             Modifier
                 .fillMaxWidth()
-
                 .padding(10.dp)
-                .background(Color.LightGray, shape = RoundedCornerShape(25.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(25.dp))
                 .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically

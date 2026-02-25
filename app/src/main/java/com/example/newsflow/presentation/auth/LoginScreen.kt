@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -49,7 +50,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            placeholder = { Text("Username", color = Color.Gray) },
+            placeholder = { Text("Username", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,7 +71,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            placeholder = { Text("password", color = Color.Gray) },
+            placeholder = { Text("password", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,7 +99,7 @@ fun LoginScreen(
         }
 
         uiState.error?.let {
-            Text(text = it, color = Color.Red)
+            Text(text = it, color = MaterialTheme.colorScheme.error)
         }
     }
 

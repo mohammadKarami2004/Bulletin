@@ -2,6 +2,7 @@ package com.example.newsflow.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.newsflow.data.local.datastore.SettingDataStore
 import com.example.newsflow.data.local.datastore.TokenDataStore
 import com.example.newsflow.data.local.datastore.dataStore
 import com.example.newsflow.data.local.db.AppDataBase
@@ -23,6 +24,11 @@ object DataBaseModule {
         return TokenDataStore(context.dataStore)
     }
 
+    @Provides
+    @Singleton
+    fun provideSettingsDataStore(@ApplicationContext context: Context): SettingDataStore {
+        return SettingDataStore(context.dataStore)
+    }
     @Provides
     @Singleton
     fun provideAppDataBase(@ApplicationContext context: Context): AppDataBase{

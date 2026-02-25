@@ -16,7 +16,12 @@ fun BottomNavBar(
             NavigationBarItem(
                 selected = currentRoute == screen.route,
                 onClick = { onItemClick(screen.route) },
-                icon = { Icon(screen.icon, screen.title) },
+                icon = {
+                    Icon(
+                        imageVector = if (currentRoute == screen.route) screen.selectedIcon else screen.icon,
+                        contentDescription = screen.title
+                    )
+                },
                 label = { Text(screen.title) }
             )
         }
