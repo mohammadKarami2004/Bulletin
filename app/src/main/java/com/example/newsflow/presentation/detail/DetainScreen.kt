@@ -1,5 +1,6 @@
 package com.example.newsflow.presentation.detail
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -20,9 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.example.newsflow.service.ArticleDownloadService
 import com.example.newsflow.ui.theme.NewsFlowTheme
 
 @Composable
@@ -30,6 +34,7 @@ fun DetailScreen(
     uiState: DetailUiState,
     onBookmarkClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = onBookmarkClick) {
@@ -103,6 +108,15 @@ fun DetailScreen(
                         )
                     }
                 }
+
+                Button(onClick = {
+                    val intent = Intent(context, ArticleDownloadService::class.java).apply {
+                        putExtra("url", uiState.article?.url)
+                    }
+                    context.startService(intent)
+                }) {
+                    Text("دانلود مقاله")
+                }
             }
         }
     }
@@ -111,7 +125,7 @@ fun DetailScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewDetailScreen(){
+fun PreviewDetailScreen() {
     NewsFlowTheme {
         DetailScreen(uiState = DetailUiState())
     }
