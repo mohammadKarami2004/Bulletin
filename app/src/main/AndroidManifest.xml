@@ -42,6 +42,14 @@
         <service
             android:name=".service.ArticleDownloadService"
             android:foregroundServiceType="dataSync"/>
+        <receiver
+            android:name=".receiver.NetworkReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"
+                    tools:ignore="BatteryLife" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
