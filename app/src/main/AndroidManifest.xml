@@ -50,6 +50,10 @@
                     tools:ignore="BatteryLife" />
             </intent-filter>
         </receiver>
+        <provider
+            android:name=".provider.BookmarkProvider"
+            android:authorities="com.example.newsflow.provider"
+            android:exported="true"/>
     </application>
 
 </manifest>

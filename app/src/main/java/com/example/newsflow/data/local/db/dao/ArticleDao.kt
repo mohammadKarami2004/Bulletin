@@ -1,5 +1,6 @@
 package com.example.newsflow.data.local.db.dao
 
+import android.database.Cursor
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -21,6 +22,10 @@ interface ArticleDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM article WHERE url = :url)")
     suspend fun isBookmarked(url: String): Boolean
+
+
+    @Query("SELECT * FROM article")
+    fun getAllArticlesAsCursor(): Cursor
 
 }
 

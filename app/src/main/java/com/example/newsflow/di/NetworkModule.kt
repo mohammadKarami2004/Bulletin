@@ -3,6 +3,7 @@ package com.example.newsflow.di
 import com.example.newsflow.data.remote.api.AuthApi
 import com.example.newsflow.data.remote.api.NewsApi
 import com.example.newsflow.data.remote.interceptor.NewsAuthInterceptor
+import com.example.newsflow.data.remote.interceptor.TokenAuthenticator
 import com.example.newsflow.utils.authRetrofit
 import com.example.newsflow.utils.newsRetrofit
 import dagger.Module
@@ -45,8 +46,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun okHttpClient() = OkHttpClient.Builder()
+    fun okHttpClient(tokenAuthenticator: TokenAuthenticator) = OkHttpClient.Builder()
         .addInterceptor(NewsAuthInterceptor())
+        .authenticator(tokenAuthenticator)
         .build()
 
 
