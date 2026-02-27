@@ -116,7 +116,8 @@ fun AppNavGraph() {
                     uiState = uiState,
                     onArticleClick = { article ->
                         navController.navigate(Screen.DetailScreen.createRoute(article))
-                    }
+                    },
+                    onSearch = viewModel::searchNews
                 )
             }
             composable(Screen.BookmarkScreen.route) {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,15 +17,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,63 +50,83 @@ import com.example.newsflow.ui.theme.NewsFlowTheme
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
-    onArticleClick: (Article) -> Unit
+    onArticleClick: (Article) -> Unit,
+    onSearch: (String) -> Unit
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+
     Column(
         Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Header
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    "NewsFlow",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "Stay informed",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Row {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Outlined.Search, contentDescription = "Search")
-                }
-                IconButton(onClick = {}) {
-                    Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
-                }
-            }
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                "NewsFlow",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Stay informed",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
+        // SearchBar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = {
+                searchQuery = it
+                onSearch(it)
+            },
+            placeholder = { Text("Search news...") },
+            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = {
+                        searchQuery = ""
+                        onSearch("")
+                    }) {
+                        Icon(Icons.Outlined.Close, contentDescription = "Clear")
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(16.dp),
+            singleLine = true
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        // Loading
+        if (uiState.isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return
+        }
+
+        // News List
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // خبر اول بزرگ
             item {
                 uiState.news.firstOrNull()?.let { article ->
                     FeaturedArticleCard(article = article, onClick = { onArticleClick(article) })
                 }
             }
-
-            // بقیه خبرها
             items(uiState.news.drop(1)) { article ->
                 SmallArticleCard(article = article, onClick = { onArticleClick(article) })
             }
         }
     }
 }
-
 @Composable
 fun FeaturedArticleCard(article: Article, onClick: () -> Unit) {
     Card(
@@ -188,10 +216,3 @@ fun SmallArticleCard(article: Article, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun Preview() {
-    NewsFlowTheme {
-        HomeScreen(uiState = HomeUiState(), onArticleClick = {})
-    }
-}
