@@ -9,14 +9,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
 
     <application
-        android:name=".base.MyApp"
+        android:name=".core.MyApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
+        android:supportsRtl="false"
         android:theme="@style/Theme.NewsFlow">
         <activity
             android:name=".MainActivity"
@@ -40,20 +40,17 @@
                 tools:node="remove" />
         </provider>
         <service
-            android:name=".service.ArticleDownloadService"
+            android:name=".core.service.ArticleDownloadService"
             android:foregroundServiceType="dataSync"/>
         <receiver
-            android:name=".receiver.NetworkReceiver"
+            android:name=".core.receiver.NetworkReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE"
                     tools:ignore="BatteryLife" />
             </intent-filter>
         </receiver>
-        <provider
-            android:name=".provider.BookmarkProvider"
-            android:authorities="com.example.newsflow.provider"
-            android:exported="true"/>
+
     </application>
 
 </manifest>
