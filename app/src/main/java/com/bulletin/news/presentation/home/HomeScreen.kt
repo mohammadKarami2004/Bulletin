@@ -74,7 +74,7 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Header
+
         Column(Modifier.padding(Spacing.md)) {
             Text("Bulletin", style = MaterialTheme.typography.headlineMedium)
             Text(
@@ -84,7 +84,6 @@ fun HomeScreen(
             )
         }
 
-        // SearchBar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChanged,
@@ -106,8 +105,6 @@ fun HomeScreen(
 
         Spacer(Modifier.height(Spacing.sm))
 
-        // دسته‌بندی‌ها فقط وقتی معنی دارن که کاربر سرچ نکرده باشه
-        // (سرچ روی "everything" endpoint می‌ره که category رو ساپورت نمی‌کنه)
         if (searchQuery.isBlank()) {
             CategoryChipsRow(
                 selectedCategory = selectedCategory,
@@ -118,9 +115,6 @@ fun HomeScreen(
 
         val refreshState = articles.loadState.refresh
 
-        // فقط وقتی از قبل دیتا داریم isRefreshing رو true می‌کنیم؛ لود اولیه
-        // (که itemCount == 0 هست) از قبل با اسکلتون تمام‌صفحه نشون داده می‌شه،
-        // نیازی به نشون‌دادن دوباره‌ی spinner پول‌تو‌رفرش روی اون نیست.
         val isRefreshing = refreshState is LoadState.Loading && articles.itemCount > 0
 
         PullToRefreshBox(

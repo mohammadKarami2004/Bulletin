@@ -13,15 +13,6 @@ import com.bulletin.news.data.remote.api.NewsApi
 import retrofit2.HttpException
 import java.io.IOException
 
-/**
- * پیاده‌سازی رسمی الگوی "Room به‌عنوان source of truth" برای Paging 3:
- * https://developer.android.com/topic/libraries/architecture/paging/v3-network-db
- *
- * تفاوت این با HeadlinesPagingSource قدیمی: اونجا هر بار مستقیم از شبکه
- * می‌خوندیم (و اگه آفلاین بودی، هیچی نداشتی نشون بدی). اینجا UI همیشه از
- * Room می‌خونه (که آفلاین هم در دسترسه)؛ این RemoteMediator فقط مسئول
- * پرکردن Room از شبکه‌ست، وقتی که لازم باشه.
- */
 @OptIn(ExperimentalPagingApi::class)
 class ArticlesRemoteMediator(
     category: String?,
@@ -33,9 +24,6 @@ class ArticlesRemoteMediator(
     private val apiCategory = category
 
     override suspend fun initialize(): InitializeAction {
-        // برای این پروژه cache قدیمی رو معتبر در نظر می‌گیریم تا وقتی
-        // کاربر خودش refresh (pull-to-refresh) بزنه؛ یعنی موقع باز کردن
-        // مجدد اپ، بلافاصله یه ریکوئست شبکه‌ی جدید نمی‌زنیم.
         return InitializeAction.SKIP_INITIAL_REFRESH
     }
 
@@ -48,7 +36,6 @@ class ArticlesRemoteMediator(
                 LoadType.REFRESH -> 1
 
                 LoadType.PREPEND -> {
-                    // چون همیشه از صفحه‌ی ۱ شروع می‌کنیم، هیچ‌وقت به عقب لود نمی‌کنیم
                     return MediatorResult.Success(endOfPaginationReached = true)
                 }
 
@@ -70,9 +57,6 @@ class ArticlesRemoteMediator(
                 return MediatorResult.Error(HttpException(response))
             }
 
-            // تصمیم "صفحه‌ی بعدی هست یا نه" رو از پاسخ خام API می‌گیریم،
-            // نه از چیزی که بعداً توی Room ذخیره می‌شه - همون درسی که از
-            // باگ HeadlinesPagingSource قبلی گرفتیم.
             val rawArticles = response.body()?.articles.orEmpty()
             val endOfPaginationReached = rawArticles.isEmpty()
 

@@ -9,8 +9,6 @@ interface NewsRepository {
     fun getHeadlinesPager(category: String?): Flow<PagingData<Article>>
     fun searchNewsPager(query: String): Flow<PagingData<Article>>
 
-    // متد سبک و one-shot، فقط برای NewsSyncWorker که نیازی به کل لیست/pagination نداره
-    // و فقط می‌خواد بدونه fetch جواب داد یا نه (برای تصمیم notify کردن / retry کردن).
     suspend fun checkForNewHeadlines(): Resource<Unit>
 
     suspend fun bookmarkArticle(article: Article)

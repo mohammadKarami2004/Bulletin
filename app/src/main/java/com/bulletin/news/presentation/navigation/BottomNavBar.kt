@@ -22,13 +22,6 @@ fun BottomNavBar(
     currentDestination: NavDestination?,
     onItemClick: (Screen) -> Unit
 ) {
-    // ظاهر شیشه‌ای (Glassmorphism): پس‌زمینه‌ی نیمه‌شفاف + حاشیه‌ی نورانی + سایه‌ی نرم،
-    // به‌جای یه NavigationBar تخت و تمام‌عرض که به کف صفحه چسبیده.
-    //
-    // نکته: Compose به‌صورت داخلی "بلور واقعیِ محتوای پشت این بار" رو ساپورت نمی‌کنه؛
-    // Modifier.blur() فقط خودِ همین کامپوننت رو بلور می‌کنه، نه لیستی که زیرش اسکرول می‌شه.
-    // برای بلور واقعیِ پشت‌زمینه باید از کتابخونه‌ای مثل Haze
-    // (https://github.com/chrisbanes/haze) استفاده کرد یا با RenderEffect دستی پیاده‌ش کرد.
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
         tonalElevation = 0.dp,

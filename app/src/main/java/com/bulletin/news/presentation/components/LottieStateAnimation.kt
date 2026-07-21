@@ -12,13 +12,6 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 
-/**
- * انیمیشن Lottie از یه فایل JSON بومی (res/raw)، نه از یه URL خارجی.
- * لینک‌های مستقیم JSON روی LottieFiles زیاد expire/منتقل می‌شن، پس بهتره
- * فایل رو خودت از https://lottiefiles.com دانلود کنی و بذاری توی res/raw،
- * بعد @RawRes آی‌دیشو اینجا پاس بدی. مثال:
- *   LottieStateAnimation(rawRes = R.raw.empty_bookmarks)
- */
 @Composable
 fun LottieStateAnimation(
     @RawRes rawRes: Int,

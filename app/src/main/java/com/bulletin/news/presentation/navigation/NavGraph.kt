@@ -76,8 +76,6 @@ fun AppNavGraph() {
             }
         }
     ) { paddingValues ->
-        // SharedTransitionLayout باید یه ancestor مشترک بین همه‌ی مقصدهایی باشه
-        // که می‌خوایم بینشون shared element transition داشته باشیم (Home <-> Detail)
         SharedTransitionLayout {
             NavHost(
                 navController = navController,

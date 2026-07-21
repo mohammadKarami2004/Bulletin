@@ -70,9 +70,6 @@ fun DetailScreen(
     val context = LocalContext.current
     val article = uiState.article
 
-    // انیمیشن bounce ساده: با هر تغییر isBookmarked، آیکون یه لحظه بزرگ می‌شه
-    // و با یه spring برمی‌گرده سایز عادی. اولین بار که صفحه باز می‌شه بونس نمی‌زنه
-    // (isInitial)، فقط وقتی کاربر واقعاً کلیک می‌کنه.
     val bookmarkScale = remember { Animatable(1f) }
     var isInitialBookmarkState by remember { mutableStateOf(true) }
 
@@ -213,8 +210,6 @@ fun DetailScreen(
                 }
                 Spacer(Modifier.height(Spacing.md))
 
-// NewsAPI (پلن رایگان) content رو تا ۲۰۰ کاراکتر truncate می‌کنه،
-// پس تنها راه خوندن متن کامل، باز کردن خود لینک خبره.
                 OutlinedButton(
                     onClick = {
                         CustomTabsIntent.Builder()

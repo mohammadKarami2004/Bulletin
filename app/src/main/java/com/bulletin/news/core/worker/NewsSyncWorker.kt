@@ -27,9 +27,6 @@ class NewsSyncWorker @AssistedInject constructor(
                 }
 
                 is Resource.Error -> {
-                    // دیگه هر خطایی رو retry نمی‌کنیم: مثلاً اگه API Key نامعتبر باشه
-                    // (Unauthorized)، retry کردن هیچ‌وقت جواب نمی‌ده و فقط باتری/شبکه
-                    // هدر می‌ره. WorkManager با Result.failure() دیگه دوباره امتحان نمی‌کنه.
                     if (result.error.isRetryable) Result.retry() else Result.failure()
                 }
                 else -> Result.failure()

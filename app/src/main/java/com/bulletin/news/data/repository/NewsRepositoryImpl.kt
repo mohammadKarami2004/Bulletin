@@ -25,13 +25,6 @@ class NewsRepositoryImpl @Inject constructor(
     private val db: AppDataBase
 ) : NewsRepository {
 
-    /**
-     * Offline-first: به‌جای خوندن مستقیم از شبکه، Room اینجا source of truth ئه.
-     * ArticlesRemoteMediator مسئوله Room رو از شبکه پر نگه داره؛ خودِ Pager
-     * همیشه از cached_articles می‌خونه - یعنی حتی آفلاین هم آخرین دیتای
-     * موفق رو نشون می‌ده، نه یه صفحه‌ی خالی.
-     * https://developer.android.com/topic/libraries/architecture/paging/v3-network-db
-     */
     @OptIn(ExperimentalPagingApi::class)
     override fun getHeadlinesPager(category: String?): Flow<PagingData<Article>> {
         val categoryKey = category ?: "all"

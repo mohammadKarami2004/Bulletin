@@ -13,17 +13,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * جایگزین NetworkReceiver قدیمی.
- *
- * مستندات رسمی (https://developer.android.com/training/monitoring-device-state/connectivity-status-type)
- * دیگه پیشنهاد نمی‌کنه از یه BroadcastReceiver با CONNECTIVITY_ACTION استفاده کنیم؛
- * اون Action از API 28 به بعد deprecated شده و برای اپ‌هایی که targetSdk >= 24 دارن
- * دیگه به‌صورت manifest-registered broadcast هم ارسال نمی‌شه.
- *
- * روش درست: ConnectivityManager.NetworkCallback که مستقیماً از سیستم registered می‌شه
- * و نیازی به IntentFilter/Manifest entry نداره.
- */
 @Singleton
 class NetworkConnectivityObserver @Inject constructor(
     @ApplicationContext private val context: Context
@@ -53,7 +42,6 @@ class NetworkConnectivityObserver @Inject constructor(
         }
     }
 
-    /** باید یه‌بار توی Application.onCreate() صدا زده بشه. */
     fun start() {
         if (isRegistered) return
         NetworkState.isConnected.value = hasActiveInternetConnection()
@@ -66,7 +54,6 @@ class NetworkConnectivityObserver @Inject constructor(
         isRegistered = true
     }
 
-    /** برای symmetry؛ چون این observer در سطح Application زندگی می‌کنه معمولاً لازم نمی‌شه صدا زده بشه. */
     fun stop() {
         if (!isRegistered) return
         connectivityManager.unregisterNetworkCallback(networkCallback)

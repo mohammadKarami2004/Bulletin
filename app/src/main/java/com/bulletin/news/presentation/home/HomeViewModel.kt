@@ -34,14 +34,6 @@ class HomeViewModel @Inject constructor(
     private val _selectedCategory = MutableStateFlow<String?>(null)
     val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
 
-    /**
-     * چرا این‌جوری، نه یه HomeUiState معمولی؟
-     * PagingData خودش snapshot و state داخلی داره (کدوم صفحه‌ها لود شدن، loadState و ...)
-     * و قرار نیست دوباره توی یه StateFlow دیگه بسته‌بندی بشه؛ طبق مستندات رسمی Paging،
-     * این Flow مستقیم با collectAsLazyPagingItems() توی Composable جمع‌آوری می‌شه.
-     * debounce/distinctUntilChanged روی سرچ باعث می‌شه با هر حرف تایپ‌شده یه ریکوئست جدید نره،
-     * و flatMapLatest یعنی اگه کاربر سریع category عوض کنه یا تایپ کنه، ریکوئست قبلی cancel می‌شه.
-     */
     val articles: Flow<PagingData<Article>> =
         combine(
             _selectedCategory,

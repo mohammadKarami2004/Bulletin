@@ -3,15 +3,6 @@ package com.bulletin.news.core.utils
 import retrofit2.HttpException
 import java.io.IOException
 
-/**
- * قبلاً هر خطایی (چه قطعی اینترنت، چه rate limit، چه کلید API نامعتبر)
- * فقط یه پیام generic بود. این باعث می‌شد UI نتونه رفتار درستی نشون بده
- * (مثلاً چرا باید "Retry" رو برای یه کلید API نامعتبر نشون بدیم؟ retry
- * کردن کمکی نمی‌کنه).
- *
- * userMessage: پیامی که به کاربر نشون داده می‌شه.
- * isRetryable: آیا نمایش دکمه‌ی Retry منطقیه یا نه.
- */
 sealed class AppError(val userMessage: String, val isRetryable: Boolean) {
 
     data object NoInternet : AppError(
@@ -40,10 +31,6 @@ sealed class AppError(val userMessage: String, val isRetryable: Boolean) {
     )
 }
 
-/**
- * NewsAPI مستنداتش می‌گه: 401 یعنی apiKey غلط/گم‌شده، 429 یعنی rate limit.
- * https://newsapi.org/docs/errors
- */
 fun Throwable.toAppError(): AppError = when (this) {
     is IOException -> AppError.NoInternet
 

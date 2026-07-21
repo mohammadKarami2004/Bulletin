@@ -25,11 +25,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 
-/**
- * افکت shimmer برای اسکلتون لودینگ - بدون هیچ کتابخونه‌ی خارجی، فقط با
- * انیمیشن رسمی Compose (infiniteRepeatable روی یه گرادیانت که جابه‌جا می‌شه).
- * https://developer.android.com/develop/ui/compose/animation/introduction#infinite-transition
- */
 @Composable
 fun rememberShimmerBrush(): Brush {
     val transition = rememberInfiniteTransition(label = "shimmer_transition")
@@ -66,13 +61,11 @@ private fun ShimmerBox(modifier: Modifier) {
     )
 }
 
-/** جایگزین موقتِ FeaturedArticleCard تا اولین صفحه لود بشه. */
 @Composable
 fun FeaturedArticleSkeleton(modifier: Modifier = Modifier) {
     ShimmerBox(modifier.fillMaxWidth().height(220.dp))
 }
 
-/** جایگزین موقتِ SmallArticleCard. */
 @Composable
 fun SmallArticleSkeleton(modifier: Modifier = Modifier) {
     Row(

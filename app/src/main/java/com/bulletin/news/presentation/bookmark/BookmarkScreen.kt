@@ -88,8 +88,6 @@ fun BookmarkScreen(
                         article = article,
                         onArticleClick = onArticleClick,
                         onDelete = onDelete,
-                        // animateItem() یعنی وقتی یه آیتم حذف می‌شه، بقیه‌ی آیتم‌ها
-                        // به‌جای پریدن ناگهانی، smooth جابه‌جا بشن.
                         modifier = Modifier.animateItem()
                     )
                     HorizontalDivider()
@@ -166,9 +164,6 @@ private fun SwipeableBookmarkRow(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            // دکمه‌ی حذف رو هم نگه می‌داریم (نه فقط swipe) چون swipe-to-dismiss
-            // برای کاربرهای screen reader / کم‌توان حرکتی قابل‌دسترس نیست؛
-            // طبق راهنمای Material باید همیشه یه جایگزین non-gesture هم باشه.
             IconButton(onClick = { onDelete(article) }) {
                 Icon(
                     Icons.Outlined.Delete,

@@ -1,12 +1,5 @@
 package com.bulletin.news.presentation.home
 
-/**
- * دسته‌بندی‌هایی که NewsAPI برای پارامتر `category` ساپورت می‌کنه:
- * https://newsapi.org/docs/endpoints/top-headlines
- *
- * id همون چیزیه که به API پاس داده می‌شه؛ label برای نمایش به کاربره.
- * id == null یعنی "همه‌ی خبرها بدون فیلتر دسته‌بندی".
- */
 data class NewsCategory(val id: String?, val label: String)
 
 val newsCategories = listOf(
