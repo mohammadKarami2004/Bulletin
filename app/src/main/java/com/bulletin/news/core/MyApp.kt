@@ -9,6 +9,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.bulletin.news.core.connectivity.NetworkConnectivityObserver
 import com.bulletin.news.core.notification.NewsNotificationManager
 import com.bulletin.news.core.worker.NewsSyncWorker
 import dagger.hilt.android.HiltAndroidApp
@@ -21,6 +22,9 @@ class MyApp : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var networkConnectivityObserver: NetworkConnectivityObserver
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -29,6 +33,7 @@ class MyApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         NewsNotificationManager(this).createChannel()
+        networkConnectivityObserver.start()
         scheduleNewsSync()
     }
 

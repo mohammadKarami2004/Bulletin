@@ -5,7 +5,6 @@ import androidx.room.Room
 import com.bulletin.news.data.local.datastore.SettingDataStore
 import com.bulletin.news.data.local.datastore.dataStore
 import com.bulletin.news.data.local.db.AppDataBase
-import com.bulletin.news.data.local.db.dao.ArticleDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,13 +28,5 @@ object DataBaseModule {
         return Room.databaseBuilder(context, AppDataBase::class.java, "bulletin.db")
             .fallbackToDestructiveMigration(true)
             .build()
-    }
-
-
-
-    @Provides
-    @Singleton
-    fun provideArticleDao(db: AppDataBase): ArticleDao {
-        return db.articleDao()
     }
 }

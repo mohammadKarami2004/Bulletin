@@ -1,6 +1,8 @@
 package com.bulletin.news.presentation.navigation
 
 import android.content.Intent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.bulletin.news.presentation.bookmark.BookmarkScreen
 import com.bulletin.news.presentation.bookmark.BookmarkViewModel
 import com.bulletin.news.presentation.detail.DetailScreen
@@ -33,6 +36,7 @@ import com.bulletin.news.core.utils.NetworkState
 import com.bulletin.news.domain.model.Article
 import kotlin.reflect.typeOf
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavGraph() {
 
@@ -72,56 +76,69 @@ fun AppNavGraph() {
             }
         }
     ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.HomeScreen,
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            composable<Screen.HomeScreen> {
-                val viewModel: HomeViewModel = hiltViewModel()
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                HomeScreen(
-                    uiState = uiState,
-                    onArticleClick = { article -> navController.navigate(Screen.DetailScreen(article)) },
-                    onSearchQueryChanged = viewModel::onSearchQueryChanged
-                )
-            }
-            composable<Screen.BookmarkScreen> {
-                val viewModel: BookmarkViewModel = hiltViewModel()
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                BookmarkScreen(
-                    uiState = uiState,
-                    onDelete = viewModel::deleteBookmark,
-                    onArticleClick = { article -> navController.navigate(Screen.DetailScreen(article)) }
-                )
-            }
-            composable<Screen.DetailScreen>(
-                typeMap = mapOf(typeOf<Article>() to serializableNavType<Article>())
+        // SharedTransitionLayout باید یه ancestor مشترک بین همه‌ی مقصدهایی باشه
+        // که می‌خوایم بینشون shared element transition داشته باشیم (Home <-> Detail)
+        SharedTransitionLayout {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.HomeScreen,
+                modifier = Modifier.padding(paddingValues)
             ) {
-                val viewModel: DetailViewModel = hiltViewModel()
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                val context = LocalContext.current
+                composable<Screen.HomeScreen> {
+                    val viewModel: HomeViewModel = hiltViewModel()
+                    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+                    val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
+                    val articles = viewModel.articles.collectAsLazyPagingItems()
+                    HomeScreen(
+                        articles = articles,
+                        searchQuery = searchQuery,
+                        selectedCategory = selectedCategory,
+                        onSearchQueryChanged = viewModel::onSearchQueryChanged,
+                        onCategorySelected = viewModel::onCategorySelected,
+                        onArticleClick = { article -> navController.navigate(Screen.DetailScreen(article)) },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable
+                    )
+                }
+                composable<Screen.BookmarkScreen> {
+                    val viewModel: BookmarkViewModel = hiltViewModel()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    BookmarkScreen(
+                        uiState = uiState,
+                        onDelete = viewModel::deleteBookmark,
+                        onArticleClick = { article -> navController.navigate(Screen.DetailScreen(article)) }
+                    )
+                }
+                composable<Screen.DetailScreen>(
+                    typeMap = mapOf(typeOf<Article>() to serializableNavType<Article>())
+                ) {
+                    val viewModel: DetailViewModel = hiltViewModel()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    val context = LocalContext.current
 
-                DetailScreen(
-                    uiState = uiState,
-                    onBackClick = { navController.popBackStack() },
-                    onBookmarkClick = viewModel::toggleBookmark,
-                    onShareClick = { url ->
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, url)
-                        }
-                        context.startActivity(Intent.createChooser(shareIntent, "Share article"))
-                    }
-                )
-            }
-            composable<Screen.SettingsScreen> {
-                val viewModel: SettingsViewModel = hiltViewModel()
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                SettingsScreen(
-                    uiState = uiState,
-                    onDarkModeToggle = viewModel::toggleDarkMode
-                )
+                    DetailScreen(
+                        uiState = uiState,
+                        onBackClick = { navController.popBackStack() },
+                        onBookmarkClick = viewModel::toggleBookmark,
+                        onShareClick = { url ->
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, url)
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Share article"))
+                        },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable
+                    )
+                }
+                composable<Screen.SettingsScreen> {
+                    val viewModel: SettingsViewModel = hiltViewModel()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    SettingsScreen(
+                        uiState = uiState,
+                        onDarkModeToggle = viewModel::toggleDarkMode
+                    )
+                }
             }
         }
     }

@@ -68,6 +68,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -96,5 +98,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit.converter.kotlinx.serialization)
     implementation(libs.androidx.browser)
+
+    implementation(libs.androidx.paging.runtime.ktx)
+    implementation(libs.androidx.paging.compose)
+    implementation(libs.lottie.compose)
 
 }

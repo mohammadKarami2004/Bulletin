@@ -2,75 +2,65 @@ package com.bulletin.news.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bulletin.news.core.utils.Resource
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.bulletin.news.domain.model.Article
 import com.bulletin.news.domain.useCase.news.GetHeadlinesUseCase
 import com.bulletin.news.domain.useCase.news.SearchNewsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flatMapLatest
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
-@OptIn(FlowPreview::class)
 class HomeViewModel @Inject constructor(
-    private val getNewsUseCase: GetHeadlinesUseCase,
+    private val getHeadlinesUseCase: GetHeadlinesUseCase,
     private val searchNewsUseCase: SearchNewsUseCase
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    private val searchQueryFlow = MutableStateFlow("")
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    init {
-        getNews()
-        viewModelScope.launch {
-            searchQueryFlow
-                .debounce(400.milliseconds)
-                .distinctUntilChanged()
-                .collectLatest { query ->
-                    if (query.isBlank()) getNews() else performSearch(query)
+    private val _selectedCategory = MutableStateFlow<String?>(null)
+    val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
+
+    /**
+     * چرا این‌جوری، نه یه HomeUiState معمولی؟
+     * PagingData خودش snapshot و state داخلی داره (کدوم صفحه‌ها لود شدن، loadState و ...)
+     * و قرار نیست دوباره توی یه StateFlow دیگه بسته‌بندی بشه؛ طبق مستندات رسمی Paging،
+     * این Flow مستقیم با collectAsLazyPagingItems() توی Composable جمع‌آوری می‌شه.
+     * debounce/distinctUntilChanged روی سرچ باعث می‌شه با هر حرف تایپ‌شده یه ریکوئست جدید نره،
+     * و flatMapLatest یعنی اگه کاربر سریع category عوض کنه یا تایپ کنه، ریکوئست قبلی cancel می‌شه.
+     */
+    val articles: Flow<PagingData<Article>> =
+        combine(
+            _selectedCategory,
+            _searchQuery.debounce(400.milliseconds).distinctUntilChanged()
+        ) { category, query -> category to query }
+            .flatMapLatest { (category, query) ->
+                if (query.isBlank()) {
+                    getHeadlinesUseCase(category)
+                } else {
+                    searchNewsUseCase(query)
                 }
-        }
-    }
+            }
+            .cachedIn(viewModelScope)
 
     fun onSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
-        searchQueryFlow.value = query
+        _searchQuery.value = query
     }
 
-    fun getNews() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = getNewsUseCase.invoke()) {
-                is Resource.Success -> {
-                    _uiState.update { it.copy(news = result.data, isLoading = false) }
-                }
-                is Resource.Error -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.message) }
-                }
-                else -> {}
-            }
-        }
-    }
-
-    private suspend fun performSearch(query: String) {
-        _uiState.update { it.copy(isLoading = true, error = null) }
-        when (val result = searchNewsUseCase.invoke(query)) {
-            is Resource.Success -> {
-                _uiState.update { it.copy(news = result.data, isLoading = false) }
-            }
-            is Resource.Error -> {
-                _uiState.update { it.copy(isLoading = false, error = result.message) }
-            }
-            else -> {}
-        }
+    fun onCategorySelected(category: String?) {
+        _selectedCategory.value = category
     }
 }

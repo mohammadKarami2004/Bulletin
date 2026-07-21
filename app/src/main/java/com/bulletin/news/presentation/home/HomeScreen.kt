@@ -1,5 +1,8 @@
 package com.bulletin.news.presentation.home
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,20 +17,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,18 +44,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemKey
 import coil3.compose.AsyncImage
+import com.bulletin.news.R
+import com.bulletin.news.core.utils.toAppError
 import com.bulletin.news.domain.model.Article
-import com.bulletin.news.ui.theme.BulletinTheme
+import com.bulletin.news.presentation.components.FeaturedArticleSkeleton
+import com.bulletin.news.presentation.components.LottieStateAnimation
+import com.bulletin.news.presentation.components.SmallArticleSkeleton
 import com.bulletin.news.ui.theme.Spacing
 
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    uiState: HomeUiState,
+    articles: LazyPagingItems<Article>,
+    searchQuery: String,
+    selectedCategory: String?,
+    onSearchQueryChanged: (String) -> Unit,
+    onCategorySelected: (String?) -> Unit,
     onArticleClick: (Article) -> Unit,
-    onSearchQueryChanged: (String) -> Unit
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
     Column(
         Modifier
@@ -57,10 +76,7 @@ fun HomeScreen(
     ) {
         // Header
         Column(Modifier.padding(Spacing.md)) {
-            Text(
-                "Bulletin",
-                style = MaterialTheme.typography.headlineMedium
-            )
+            Text("Bulletin", style = MaterialTheme.typography.headlineMedium)
             Text(
                 "Stay informed",
                 style = MaterialTheme.typography.bodySmall,
@@ -68,14 +84,14 @@ fun HomeScreen(
             )
         }
 
-        // SearchBar — منبع حقیقت واحد: uiState.searchQuery (نه یه remember جدا)
+        // SearchBar
         OutlinedTextField(
-            value = uiState.searchQuery,
+            value = searchQuery,
             onValueChange = onSearchQueryChanged,
             placeholder = { Text("Search news...") },
             leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
             trailingIcon = {
-                if (uiState.searchQuery.isNotEmpty()) {
+                if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { onSearchQueryChanged("") }) {
                         Icon(Icons.Outlined.Close, contentDescription = "Clear search")
                     }
@@ -90,47 +106,216 @@ fun HomeScreen(
 
         Spacer(Modifier.height(Spacing.sm))
 
-        // Loading
-        if (uiState.isLoading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            return
+        // دسته‌بندی‌ها فقط وقتی معنی دارن که کاربر سرچ نکرده باشه
+        // (سرچ روی "everything" endpoint می‌ره که category رو ساپورت نمی‌کنه)
+        if (searchQuery.isBlank()) {
+            CategoryChipsRow(
+                selectedCategory = selectedCategory,
+                onCategorySelected = onCategorySelected
+            )
+            Spacer(Modifier.height(Spacing.sm))
         }
 
-        if (uiState.error != null) {
-            Box(
-                Modifier.fillMaxSize().padding(Spacing.lg),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = uiState.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            return
-        }
+        val refreshState = articles.loadState.refresh
 
-        // News List
-        LazyColumn(
-            Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        // فقط وقتی از قبل دیتا داریم isRefreshing رو true می‌کنیم؛ لود اولیه
+        // (که itemCount == 0 هست) از قبل با اسکلتون تمام‌صفحه نشون داده می‌شه،
+        // نیازی به نشون‌دادن دوباره‌ی spinner پول‌تو‌رفرش روی اون نیست.
+        val isRefreshing = refreshState is LoadState.Loading && articles.itemCount > 0
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { articles.refresh() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
         ) {
-            item {
-                uiState.news.firstOrNull()?.let { article ->
-                    FeaturedArticleCard(article = article, onClick = { onArticleClick(article) })
+            when {
+                refreshState is LoadState.Loading && articles.itemCount == 0 -> {
+                    LoadingSkeletonList()
                 }
-            }
-            items(uiState.news.drop(1)) { article ->
-                SmallArticleCard(article = article, onClick = { onArticleClick(article) })
+
+                refreshState is LoadState.Error && articles.itemCount == 0 -> {
+                    val appError = refreshState.error.toAppError()
+                    val retryAction: (() -> Unit)? = if (appError.isRetryable) {
+                        { articles.retry() }
+                    } else {
+                        null
+                    }
+                    FullScreenMessage(
+                        rawRes = R.raw.no_internet,
+                        title = "Couldn't load news",
+                        subtitle = appError.userMessage,
+                        // اگه خطا retryable نباشه (مثلاً API key نامعتبر)، دکمه‌ی
+                        // Retry اصلاً نشون نمی‌دیم چون دوباره زدنش کمکی نمی‌کنه.
+                        actionLabel = if (appError.isRetryable) "Retry" else null,
+                        onAction = retryAction
+                    )
+                }
+
+                articles.itemCount == 0 -> {
+                    FullScreenMessage(
+                        rawRes = R.raw.empty_search,
+                        title = "No results",
+                        subtitle = if (searchQuery.isBlank()) {
+                            "No articles in this category right now"
+                        } else {
+                            "No articles found for \"$searchQuery\""
+                        }
+                    )
+                }
+
+                else -> {
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(
+                            count = articles.itemCount,
+                            key = articles.itemKey { it.url }
+                        ) { index ->
+                            val article = articles[index]
+                            when {
+                                article == null -> SmallArticleSkeleton()
+                                index == 0 -> FeaturedArticleCard(
+                                    article = article,
+                                    onClick = { onArticleClick(article) },
+                                    sharedTransitionScope = sharedTransitionScope,
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                                else -> SmallArticleCard(
+                                    article = article,
+                                    onClick = { onArticleClick(article) },
+                                    sharedTransitionScope = sharedTransitionScope,
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                            }
+                        }
+
+                        item {
+                            PagingAppendFooter(
+                                loadState = articles.loadState.append,
+                                onRetry = { articles.retry() }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
+
 @Composable
-fun FeaturedArticleCard(article: Article, onClick: () -> Unit) {
+private fun CategoryChipsRow(
+    selectedCategory: String?,
+    onCategorySelected: (String?) -> Unit
+) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = Spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(newsCategories, key = { it.id ?: "all" }) { category ->
+            FilterChip(
+                selected = selectedCategory == category.id,
+                onClick = { onCategorySelected(category.id) },
+                label = { Text(category.label) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadingSkeletonList() {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        FeaturedArticleSkeleton()
+        repeat(5) { SmallArticleSkeleton() }
+    }
+}
+
+@Composable
+private fun PagingAppendFooter(loadState: LoadState, onRetry: () -> Unit) {
+    when (loadState) {
+        is LoadState.Loading -> {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.md),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(28.dp))
+            }
+        }
+
+        is LoadState.Error -> {
+            val appError = loadState.error.toAppError()
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.md),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    appError.userMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                if (appError.isRetryable) {
+                    Spacer(Modifier.height(4.dp))
+                    OutlinedButton(onClick = onRetry) { Text("Retry") }
+                }
+            }
+        }
+
+        is LoadState.NotLoading -> Unit
+    }
+}
+
+@Composable
+private fun FullScreenMessage(
+    @androidx.annotation.RawRes rawRes: Int,
+    title: String,
+    subtitle: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .padding(Spacing.lg),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            LottieStateAnimation(rawRes = rawRes)
+            Spacer(Modifier.height(Spacing.sm))
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (actionLabel != null && onAction != null) {
+                Spacer(Modifier.height(Spacing.md))
+                OutlinedButton(onClick = onAction) { Text(actionLabel) }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun FeaturedArticleCard(
+    article: Article,
+    onClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -139,14 +324,20 @@ fun FeaturedArticleCard(article: Article, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box {
-            AsyncImage(
-                model = article.urlToImage,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp),
-                contentScale = ContentScale.Crop
-            )
+            with(sharedTransitionScope) {
+                AsyncImage(
+                    model = article.urlToImage,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .sharedElement(
+                            rememberSharedContentState(key = "article-image-${article.url}"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ),
+                    contentScale = ContentScale.Crop
+                )
+            }
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -167,20 +358,32 @@ fun FeaturedArticleCard(article: Article, onClick: () -> Unit) {
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White.copy(alpha = 0.7f)
                 )
-                Text(
-                    text = article.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                with(sharedTransitionScope) {
+                    Text(
+                        text = article.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.sharedBounds(
+                            rememberSharedContentState(key = "article-title-${article.url}"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
+                    )
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun SmallArticleCard(article: Article, onClick: () -> Unit) {
+fun SmallArticleCard(
+    article: Article,
+    onClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -188,27 +391,39 @@ fun SmallArticleCard(article: Article, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = article.urlToImage,
-            contentDescription = null,
-            modifier = Modifier
-                .size(90.dp)
-                .clip(RoundedCornerShape(12.dp)),
-            contentScale = ContentScale.Crop
-        )
+        with(sharedTransitionScope) {
+            AsyncImage(
+                model = article.urlToImage,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .sharedElement(
+                        rememberSharedContentState(key = "article-image-${article.url}"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                contentScale = ContentScale.Crop
+            )
+        }
         Column(Modifier.weight(1f)) {
             Text(
                 text = article.source,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
-            Text(
-                text = article.title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            with(sharedTransitionScope) {
+                Text(
+                    text = article.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.sharedBounds(
+                        rememberSharedContentState(key = "article-title-${article.url}"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
+                )
+            }
             Text(
                 text = article.publishedAt.take(10),
                 style = MaterialTheme.typography.bodySmall,
@@ -217,4 +432,3 @@ fun SmallArticleCard(article: Article, onClick: () -> Unit) {
         }
     }
 }
-
