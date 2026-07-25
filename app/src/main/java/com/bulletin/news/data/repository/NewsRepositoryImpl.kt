@@ -36,8 +36,6 @@ class NewsRepositoryImpl @Inject constructor(
         }.flow.map { pagingData -> pagingData.map { it.toDomain() } }
     }
 
-    // سرچ عمداً cache نمی‌شه: تعداد query های ممکنه نامحدوده، پس نگه‌داشتنش
-    // توی Room ارزشی نداره (بر خلاف چندتا category ثابتِ headlines).
     override fun searchNewsPager(query: String): Flow<PagingData<Article>> {
         return Pager(
             config = PagingConfig(pageSize = PAGE_SIZE, enablePlaceholders = false)

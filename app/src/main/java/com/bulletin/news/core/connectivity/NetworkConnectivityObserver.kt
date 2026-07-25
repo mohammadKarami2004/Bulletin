@@ -25,7 +25,6 @@ class NetworkConnectivityObserver @Inject constructor(
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             NetworkState.isConnected.value = true
-            // وقتی اینترنت برگشت، یه sync فوری بزنیم (همون رفتار قبلی NetworkReceiver)
             val syncRequest = OneTimeWorkRequestBuilder<NewsSyncWorker>().build()
             WorkManager.getInstance(context).enqueue(syncRequest)
         }
