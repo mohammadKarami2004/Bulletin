@@ -103,4 +103,6 @@ dependencies {
     implementation(libs.androidx.paging.compose)
     implementation(libs.lottie.compose)
 
+    implementation(libs.room.paging)
+
 }

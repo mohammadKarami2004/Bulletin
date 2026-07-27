@@ -64,6 +64,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 
 datastore-prefrences={group="androidx.datastore", name="datastore-preferences", version="1.2.0"}
 
+room-paging={group="androidx.room", name="room-paging", version.ref = "room"}
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 

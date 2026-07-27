@@ -10,6 +10,7 @@ import com.bulletin.news.data.local.db.entity.CachedArticleEntity
 @Dao
 interface CachedArticleDao {
 
+
     @Query("SELECT * FROM cached_articles WHERE category = :category ORDER BY sortOrder ASC")
     fun pagingSource(category: String): PagingSource<Int, CachedArticleEntity>
 
@@ -18,4 +19,7 @@ interface CachedArticleDao {
 
     @Query("DELETE FROM cached_articles WHERE category = :category")
     suspend fun clearCategory(category: String)
+
+    @Query("SELECT COUNT(*) FROM cached_articles WHERE category = :category")
+    suspend fun countByCategory(category: String): Int
 }

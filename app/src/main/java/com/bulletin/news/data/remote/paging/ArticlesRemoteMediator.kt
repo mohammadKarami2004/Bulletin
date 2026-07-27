@@ -24,7 +24,12 @@ class ArticlesRemoteMediator(
     private val apiCategory = category
 
     override suspend fun initialize(): InitializeAction {
-        return InitializeAction.SKIP_INITIAL_REFRESH
+        val hasCachedData = db.cachedArticleDao().countByCategory(categoryKey) > 0
+        return if (hasCachedData) {
+            InitializeAction.SKIP_INITIAL_REFRESH
+        } else {
+            InitializeAction.LAUNCH_INITIAL_REFRESH
+        }
     }
 
     override suspend fun load(
